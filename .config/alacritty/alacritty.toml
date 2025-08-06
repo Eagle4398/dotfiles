@@ -1,0 +1,4 @@
+general.import = [
+  "~/.config/alacritty/alacritty-common.toml",
+  "~/.config/alacritty/alacritty-host.toml" # optional import 
+]

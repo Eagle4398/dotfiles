@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ "$#" -ne 2]; then
+    echo "Usage: $0 %executable% %workspacenumber%"
+    exit 1
+fi
+
+capitalize() {
+    local input="$1"
+    echo "${input^}"
+}
+
+# are binaries in path
+REQUIRED_TOOLS=("xdotool" "$1" "i3-msg" "jq") 
+for tool in "${REQUIRED_TOOLS[@]}"; do
+    if ! command -v "$tool" &> /dev/null; then
+        echo "Error: Required tool '$tool' not found in PATH." >&2
+        exit 1
+    fi
+done
+
+# is program open
+set +e
+window_id=$(xdotool search --class "$(capitalize "$1")" 2>/dev/null | head -n 1)
+set -e
+
+# save where you are at right now (optionally)
+current_workspace_num=$(i3-msg -t get_workspaces | jq '.[] | select(.focused==true).num')
+mkdir -p /tmp/i3scripts
+if [ "$current_workspace_num" -ne "$2" ]; then
+    echo "$current_workspace_num" > /tmp/i3scripts/workspacenum
+fi
+
+# if program not open, open and wait for it and then focus on the specified workspace.
+if [[ -z "$window_id" ]]; then
+    "$1" &
+    count=0
+    set +e
+    while [[ -z "$window_id" && "$count" -lt 50 ]]; do
+        sleep 0.3 
+        window_id=$(xdotool search --class "$(capitalize "$1")" 2>/dev/null | head -n 1)
+        ((count++)) 
+    done
+    set -e
+    i3-msg workspace "$2"
+# if it is open then navigate to it, or navigate back
+else
+    if [ "$current_workspace_num" -eq "$2" ]; then
+        if [ -f /tmp/i3scripts/workspacenum ]; then
+            last_workspace=$(< /tmp/i3scripts/workspacenum)
+            i3-msg workspace "$last_workspace" 
+        else
+            i3-msg workspace 1
+        fi
+    else
+        i3-msg workspace "$2" 
+    fi
+fi

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+# Exit when non-zero status
+# Unset Variable -> exit error
+# Stop on errored pipe |
+set -euo pipefail
+
+# echo "PATH is: $PATH"
+# which powersaveroot
+powersaveuser "$@"
+powersaveroot "$@"

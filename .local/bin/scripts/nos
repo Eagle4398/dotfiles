@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+case "$1" in
+reb)
+    sudo nixos-rebuild switch 
+    ;;
+test)
+    sudo nixos-rebuild test 
+    ;;
+gc)
+    sudo nix-collect-garbage
+    ;;
+ultragc)
+    sudo bash -c "nix-collect-garbage --delete-old && nix-collect-garbage -d && /run/current-system/bin/switch-to-configuration boot"
+    nix-collect-garbage -d
+    ;;
+*)
+    echo "Unknown command: $1"
+    echo "Available commands: reb, test, gc"
+    ;;
+esac

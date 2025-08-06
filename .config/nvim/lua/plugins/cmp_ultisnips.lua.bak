@@ -1,0 +1,122 @@
+return { {
+    "hrsh7th/nvim-cmp",
+    enabled = true,
+    dependencies = {
+        {
+            "sirver/ultisnips",
+            init = function()
+                vim.g.UltiSnipsExpandTrigger = '<tab>'
+                vim.g.UltiSnipsJumpForwardTrigger = '<tab>'
+                vim.g.UltiSnipsJumpBackwardTrigger = '<s-tab>'
+                --		F this, doesn't work
+                --		vim.g.UltiSnipsSnippetsDir = vim.fn.expand("~/.config/nvim/user/UltiSnips")
+                --		vim.g.UltiSnipsSnippetsDir = '/home/max/.config/nvim/user/UltiSnips'
+            end,
+        }, {
+        "quangnguyen30192/cmp-nvim-ultisnips",
+        config = function()
+            require("cmp_nvim_ultisnips").setup {}
+        end,
+    },
+        {
+            "hrsh7th/cmp-nvim-lsp",
+            "neovim/nvim-lspconfig",
+            -- "abecodes/tabout.nvim"
+        },
+    },
+    config = function()
+        local cmp = require("cmp")
+        local cmp_ultisnips_mappings = require("cmp_nvim_ultisnips.mappings")
+
+        cmp.setup({
+            snippet = {
+                expand = function(args)
+                    vim.fn["UltiSnips#Anon"](args.body)
+                end,
+            },
+            sources = {
+                { name = "ultisnips" },
+                { name = "nvim_lsp" },     
+            },
+            mapping = {
+                ["<Tab>"] = cmp.mapping(
+                    function(fallback)
+                        if cmp.visible() then
+                            cmp_ultisnips_mappings.expand_or_jump_forwards(fallback)
+                        else
+                            -- fucking manual tabout because I didn't want to migrate to LuaSnip
+                            local excluded_bracketjump_filetypes = { "tex" }
+                            local file_extension = vim.fn.expand("%:e")
+                            if not vim.tbl_contains(excluded_bracketjump_filetypes, file_extension) then
+                                local buf = vim.api.nvim_get_current_buf()
+                                local line = vim.api.nvim_get_current_line()
+                                local cursor = vim.api.nvim_win_get_cursor(0)
+
+                                local function in_bracket_that_ends_in_current_line()
+                                    local line = vim.api.nvim_get_current_line()
+                                    local cursor_pos = vim.api.nvim_win_get_cursor(0)[2]
+
+                                    local bracket_pairs = {
+                                        ["("] = ")",
+                                        ["["] = "]",
+                                        ["{"] = "}",
+                                    }
+
+                                    local current_char = line:sub(cursor_pos, cursor_pos)
+
+                                    if bracket_pairs[current_char] then
+                                        local closing_bracket_pos = line:find(bracket_pairs[current_char],
+                                            cursor_pos + 1)
+                                        if closing_bracket_pos and closing_bracket_pos <= #line then
+                                            return closing_bracket_pos
+                                        end
+                                    else
+                                        local i = cursor_pos - 1
+                                        while i >= 1 do
+                                            local char = line:sub(i, i)
+                                            if bracket_pairs[char] then
+                                                local closing_bracket_pos = line:find(bracket_pairs[char], i + 1)
+                                                if closing_bracket_pos and closing_bracket_pos >= cursor_pos then
+                                                    return closing_bracket_pos
+                                                end
+                                                break
+                                            end
+                                            i = i - 1
+                                        end
+                                    end
+
+                                    return -1
+                                end
+
+                                local closing_bracket_pos = in_bracket_that_ends_in_current_line(line, cursor[2])
+                                if closing_bracket_pos > 0 then
+                                    vim.api.nvim_win_set_cursor(0,
+                                        { vim.api.nvim_win_get_cursor(0)[1], closing_bracket_pos })
+                                else
+                                    cmp_ultisnips_mappings.compose { "jump_forwards" } (fallback)
+                                end
+                            else
+                                cmp_ultisnips_mappings.expand_or_jump_forwards(fallback)
+                            end
+                        end
+                    end,
+                    { "i", "s" }
+                ),
+                ["<S-Tab>"] = cmp.mapping(
+                    function(fallback)
+                        cmp_ultisnips_mappings.jump_backwards(fallback)
+                    end,
+                    { "i", "s" }
+                ),
+                ["<CR>"] = cmp.mapping.confirm({ select = true }),
+                ["<C-p>"] = cmp.mapping.select_prev_item(cmp_select),
+                ["<C-n>"] = cmp.mapping.select_next_item(cmp_select),
+                ["<C-Space>"] = cmp.mapping.complete(),
+            },
+        })
+        local lspconfig = require("lspconfig")
+        lspconfig.texlab.setup {}
+
+
+    end,
+} }

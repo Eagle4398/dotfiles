@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+spice-vdagent
+export DISPLAY=:0
+xrandr --output Virtual-1 --auto

@@ -1,0 +1,13 @@
+[project]
+name = "nvim"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11.10"
+dependencies = [
+    "neovim>=0.3.1",
+    "typstar",
+]
+
+[tool.uv.sources]
+typstar = { git = "https://github.com/arne314/typstar.git" }

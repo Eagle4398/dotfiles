@@ -1,0 +1,5 @@
+.venv
+result/
+./.config/nvim/lazy-lock.json
+.config/nvim/lazy-lock.json
+stowignore/wallpaper.jpg

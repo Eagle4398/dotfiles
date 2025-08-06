@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+# Exit when non-zero status
+# Unset Variable -> exit error
+# Stop on errored pipe | 
+set -euo pipefail
+
+# try and find closest .venv but maximally 4 levels up.
+find_activate_venv() {
+  local passthrough=0 
+  if [ -n "$1" ] && [ "$1" = "glob" ]; then
+        local passthrough=1
+        safe_print "Hello world!"
+  fi
+
+  local dir="${1:-$(pwd)}"
+  local level=0
+
+  while [ "$level" -lt 4 ]; do
+    if [ "$passthrough" -eq 1 ]; then 
+        safe_print "I'm trying to break"
+        break;
+    fi
+
+    safe_print "I'm not breaking."
+    local foundpath=$(find "$dir" -maxdepth 1 -type d -name 'venv')
+    
+    if [ -n "$foundpath" ]; then
+        safe_print "Found venv at $foundpath"
+        safe_print "Activating venv..."
+        source "$foundpath/bin/activate"
+        return
+    fi
+    
+    dir=$(dirname "$dir")
+    level=$((level + 1))
+  done
+  safe_print "No venv found in current directory or parent directories. Using global environment."
+  source "$PY_PATH/bin/activate"
+}

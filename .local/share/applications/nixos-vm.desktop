@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=NixOS VM
+Comment=Start and view the NixOS KVM virtual machine
+Exec=sh -c "virsh --connect qemu:///system start nixos && virt-viewer --connect qemu:///system nixos"
+Icon=virt-manager 
+Terminal=false
+Categories=System;Emulator;Virtualization;
+Keywords=vm;virtual machine;nixos;qemu;kvm;virt-viewer;

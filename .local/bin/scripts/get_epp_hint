@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Exit when non-zero status
+# Unset Variable -> exit error
+# Stop on errored pipe | 
+set -euo pipefail
+cat /sys/devices/system/cpu/cpu*/cpufreq/energy_performance_preference

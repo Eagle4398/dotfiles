@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+output="$("$@" 2>&1)"
+echo -e "$output" | tee >(xclip -selection clipboard)

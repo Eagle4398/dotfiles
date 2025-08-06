@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+# reduces hertz to 60 / max
+
+# Exit when non-zero status
+# Unset Variable -> exit error
+# Stop on errored pipe | 
+set -euo pipefail
+
+output_name="eDP-1" 
+
+if [ "$1" = "high" ]; then
+  current_mode=$(xrandr | grep -A1 "$output_name connected" | tail -n1 | awk '{print $1}')
+  rates=$(xrandr | grep -A10 "$output_name connected" | grep -E "\s+$current_mode\s+" | tr -s ' ' | cut -d' ' -f3- | tr ' ' '\n' | sed 's/*//g' | sed 's/+//g' | sort -nr | head -n1)
+  xrandr --output "$output_name" --mode "$current_mode" --rate "$rates"
+elif [ "$1" = "low" ]; then
+  current_mode=$(xrandr | grep -A1 "$output_name connected" | tail -n1 | awk '{print $1}')
+  xrandr --output "$output_name" --mode "$current_mode" --rate 60
+else
+  echo "Usage: $0 [high|low]"
+  exit 1
+fi
+

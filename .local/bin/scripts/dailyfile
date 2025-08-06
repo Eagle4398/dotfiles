@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+# fast create .typ file from local template.typ
+
+date=$(date +%Y-%m-%d)
+ext="${1:-typ}"
+filename="${date}.${ext}"
+
+if [ ! -f "$filename" ]; then
+    if [ -f "template.typ" ]; then
+        cp "template.typ" "$filename"
+        echo "Created $filename from template.typ"
+    else
+        touch "$filename"
+        echo "Created new empty file: $filename"
+    fi
+fi
+
+nvim "$filename"

@@ -1,0 +1,26 @@
+{
+	"name": "Vimium C",
+	"@time": "5/1/2025, 6:35:47 PM",
+	"time": 1746117347465,
+	"environment": {
+		"extension": "2.12.2",
+		"platform": "linux",
+		"chromium": 134
+	},
+	"allBrowserUrls": true,
+	"grabBackFocus": true,
+	"keyLayout": 18,
+	"keyMappings": [
+		"#!no-check",
+		"unmap J",
+		"map J nextTab",
+		"unmap K",
+		"map K previousTab",
+		"map <c-s-x> closeOtherTabs",
+		"map <c-s-j> closeTabsOnRight",
+		"map <c-s-k> closeTabsOnLeft",
+		""
+	],
+	"vimSync": true,
+	"ignoreCapsLock": 2
+}

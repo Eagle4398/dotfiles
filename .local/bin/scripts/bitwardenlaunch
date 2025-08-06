@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+# Exit when non-zero status
+# Unset Variable -> exit error
+# Stop on errored pipe |
+set -euo pipefail
+
+# are tools available
+REQUIRED_TOOLS=("xdotool" "bitwarden" "i3-msg" "jq") 
+for tool in "${REQUIRED_TOOLS[@]}"; do
+    if ! command -v "$tool" &> /dev/null; then
+        echo "Error: Required tool '$tool' not found in PATH." >&2
+        exit 1
+    fi
+done
+
+# is bitwarden open
+set +e
+window_id=$(xdotool search --class "Bitwarden" 2>/dev/null | head -n 1)
+set -e
+
+# save current workspace number if necessary
+current_workspace_num=$(i3-msg -t get_workspaces | jq '.[] | select(.focused==true).num')
+mkdir -p /tmp/i3scripts
+if [ "$current_workspace_num" -ne 10 ]; then
+    echo "$current_workspace_num" > /tmp/i3scripts/workspacenum
+fi
+
+# if bitwarden is not open open bitwarden and when it opens navigate to the space
+if [[ -z "$window_id" ]]; then
+    bitwarden &
+    count=0
+    set +e
+    while [[ -z "$window_id" && "$count" -lt 50 ]]; do
+        sleep 0.3 
+        window_id=$(xdotool search --class "Bitwarden" 2>/dev/null | head -n 1)
+        ((count++)) 
+    done
+    set -e
+    i3-msg workspace 10
+else
+    # if you are already on workspace 10 and it is open, then navigate back where you
+    # came from
+    if [ "$current_workspace_num" -eq 10 ]; then
+        if [ -f /tmp/i3scripts/workspacenum ]; then
+            last_workspace=$(< /tmp/i3scripts/workspacenum)
+            i3-msg workspace "$last_workspace" 
+        else
+            i3-msg workspace 1
+        fi
+    # if bitwaren is open and you aren't looking at it then move to it
+    else
+        i3-msg workspace 10
+    fi
+fi

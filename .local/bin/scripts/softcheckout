@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+# Exit when non-zero status
+# Unset Variable -> exit error
+# Stop on errored pipe | 
+set -euo pipefail
+
+git symbolic-ref HEAD refs/heads/$1

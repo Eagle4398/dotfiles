@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" ]; then
+    echo "Incorrect usage, use 'plus', 'minus', or 'set'"
+    exit 1
+fi
+
+case "$1" in
+    plus)
+        if [ -z "$2" ]; then
+            echo "Incorrect usage, for 'plus', provide a volume level (e.g., 'plus 5%')"
+            exit 1
+        fi
+        echo "You passed 'plus' - Increasing the volume"
+        pactl list short sinks | awk '{print $1}' | xargs -I{} pactl set-sink-volume {} "+$2"
+        ;;
+    
+    minus)
+        if [ -z "$2" ]; then
+            echo "Incorrect usage, for 'minus', provide a volume level (e.g., 'minus 5%')"
+            exit 1
+        fi
+        echo "You passed 'minus' - Decreasing the volume"
+        pactl list short sinks | awk '{print $1}' | xargs -I{} pactl set-sink-volume {} "-$2"
+        ;;
+    
+    set)
+        if [ -z "$2" ]; then
+            echo "Incorrect usage, for 'set', provide a volume level (e.g., 'set 50%')"
+            exit 1
+        fi
+        echo "You passed 'set' - Setting volume to $2"
+        pactl list short sinks | awk '{print $1}' | xargs -I{} pactl set-sink-volume {} "$2"
+        ;;
+    mute)
+        echo "You passed 'mute' - Muting all sinks"
+        pactl list short sinks | awk '{print $1}' | xargs -I{} pactl set-sink-mute {} toggle
+        ;;
+    *)
+        echo "Incorrect usage, use 'plus', 'minus', or 'set'"
+        exit 1
+        ;;
+esac

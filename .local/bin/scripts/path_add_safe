@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+# Usage: path_add_safe <directory>
+
+dir="$1"
+
+if [ -z "$dir" ]; then
+    echo "Usage: path_add_safe <directory>"
+    exit 1
+fi
+
+if [ ! -d "$dir" ]; then
+    echo "Directory does not exist: $dir"
+    exit 1
+fi
+
+case ":$PATH:" in
+    *":$dir:"*)
+        ;;
+    *)
+        export PATH="$dir${PATH:+":$PATH"}"
+        ;;
+esac

@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+# Exit when non-zero status
+# Unset Variable -> exit error
+# Stop on errored pipe |
+set -euo pipefail
+
+# if this program is run as root, it can not infer on which user
+# the user-actions should be taken. therefore in that case,
+# the root user needs to specify the user
+if [ "$EUID" -eq 0 ]; then
+    if [ -z "$2" ]; then
+        echo "Usage as root: $0 <username> [args...]"
+        exit 1
+    fi
+    # drop down to the user
+    exec runuser -l "$2" -c "$0 $@"
+fi
+
+echo "Running user powersave actions as $USER..."
+
+if [ "$1" = "on" ]; then
+    changehz low
+elif [ "$1" = "off" ]; then
+    changehz high
+else
+  echo "Usage: $0 [off|on]"
+  exit 1
+fi

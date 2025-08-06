@@ -1,0 +1,7 @@
+/usr/local/texlive/2024/bin/x86_64-linux
+/usr/local/jdk-23.0.1/bin
+$HOME/.pyenv/bin
+/snap/bin
+$HOME/.local/bin
+$HOME/.local/bin/scripts
+$BASHRC/.local/bin/scripts

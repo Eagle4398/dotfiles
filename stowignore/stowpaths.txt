@@ -1,0 +1,8 @@
+$HOME/.config/nvim/
+$HOME/.config/i3/
+$HOME/.config/i3blocks/
+$HOME/.config/alacritty/
+$HOME/.tmux.conf
+$HOME/.wallpaper.jpg
+$HOME/.local/share/bash-completion/completions/command-name-completion.bash
+$HOME/.screenlayout/

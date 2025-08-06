@@ -1,0 +1,16 @@
+
+[window]
+decorations = "none"
+opacity = 0.8
+
+[font.normal]
+family = "CaskaydiaCove Nerd Font"
+style = "Regular"
+
+[font.bold]
+family = "CaskaydiaCove Nerd Font" 
+style = "Bold"                 
+
+[font.italic]
+family = "CaskaydiaCove Nerd Font" 
+style = "Italic"               

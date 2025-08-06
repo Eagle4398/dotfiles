@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Exit when non-zero status
+# Unset Variable -> exit error
+# Stop on errored pipe | 
+set -euo pipefail
+
+sudo journalctl -b | curl -F 'file=@-' 0x0.st

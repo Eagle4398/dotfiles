@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+# this script creates a template for a new pathable command and opens it.
+# therefore the name makecmd
+
+if [ -z "$1" ]; then
+    echo "Usage: $0 cmd"
+    exit 1
+fi
+
+cmd="$1"
+
+script_dir="$(dirname "$(realpath "$0")")"
+
+new_file_path="$script_dir/$cmd"
+
+if [ ! -f "$new_file_path" ]; then
+    cat <<EOF >"$new_file_path"
+#!/usr/bin/env bash
+
+# Exit when non-zero status
+# Unset Variable -> exit error
+# Stop on errored pipe | 
+set -euo pipefail
+
+
+EOF
+
+    chmod +x $new_file_path
+
+    if [[ "${EDITOR:-nano}" == *nvim* || "${EDITOR:-nano}" == *vim* ]]; then
+        "${EDITOR:-nvim}" +'normal G$' +startinsert "$new_file_path"
+    else
+        "${EDITOR:-nano}" "$new_file_path"
+    fi
+else
+    if [[ "${EDITOR:-nano}" == *nvim* || "${EDITOR:-nano}" == *vim* ]]; then
+        "${EDITOR:-nvim}" "$new_file_path"
+    else
+        "${EDITOR:-nano}" "$new_file_path"
+    fi
+fi

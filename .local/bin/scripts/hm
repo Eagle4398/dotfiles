@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+# Exit when non-zero status
+# Unset Variable -> exit error
+# Stop on errored pipe | 
+set -euo pipefail
+
+print_usage() {
+    echo "Usage: $0 [test|rollback]"
+    echo "  test     - Test and apply home-manager configuration"
+    echo "  rollback - Rollback to a previous home-manager generation"
+    exit 1
+}
+
+if [[ $# -ne 1 ]]; then
+    print_usage
+fi
+
+case "$1" in
+"test")
+    ####### this is basically autoupdate the HomeManager channel to match that of
+    ####### NixOS
+    version=$(nixos-version | grep -oP '^\d+\.\d+')
+    if [ -z "$version" ]; then
+        echo "Failed to extract NixOS version."
+        exit 1
+    fi
+    echo "Detected NixOS version: $version"
+    hm_line=$(nix-channel --list | grep '^home-manager ')
+    if [ -z "$hm_line" ]; then
+        echo "No home-manager channel configured."
+        current_version=""
+    else
+        current_version=$(echo "$hm_line" | grep -oP 'release-\K[0-9]+\.[0-9]+')
+    fi
+    echo "Current home-manager channel version: ${current_version:-none}"
+    if [ "$current_version" != "$version" ]; then
+        echo "Updating home-manager channel to version $version"
+        nix-channel --remove home-manager
+        nix-channel --add "https://github.com/nix-community/home-manager/archive/release-${version}.tar.gz" home-manager
+        nix-channel --update
+    else
+        echo "Home-manager channel version matches NixOS version. No update needed."
+    fi
+
+    #################################
+
+    # the reason I still call it test is because if you use it on NixOS
+    # then the changes will not be persistent. One needs to nixos-rebuild switch.
+    echo "Starting home-manager workflow..."
+    home-manager switch
+
+    echo "Applying home-manager configuration..."
+    echo "Home Manager configuration applied successfully!"
+    ;;
+
+"rollback")
+    # Previews the last 20 home-manager generations and let's you interactively
+    # select which one to restore.
+    echo "Starting home-manager rollback workflow..."
+
+    while true; do
+        echo "Available Home Manager generations (most recent 20):"
+        echo "--------------------------------"
+        if ! command -v home-manager &>/dev/null; then
+            generations_output=$(nix-shell -p home-manager --run "home-manager generations" | head -n 20)
+        else
+            generations_output=$(home-manager generations | tac)
+        fi
+        echo "$generations_output"
+        echo "--------------------------------"
+
+        echo -n "Enter the generation ID to rollback to (or Ctrl+C to exit): "
+        read gen_id
+
+        if ! [[ "$gen_id" =~ ^[0-9]+$ ]]; then
+            echo "Error: Please enter a valid numeric ID."
+            continue
+        fi
+
+        generation_line=$(echo "$generations_output" | grep -E "id $gen_id ->")
+
+        if [[ -z "$generation_line" ]]; then
+            echo "Error: Generation with ID $gen_id not found. Please try again."
+            continue
+        fi
+
+        generation_path=$(echo "$generation_line" | sed -E 's/.*-> (\/nix\/store\/[^ ]+).*/\1/')
+
+        echo "Rolling back to generation $gen_id at path: $generation_path"
+        "$generation_path/activate"
+
+        if [[ $? -eq 0 ]]; then
+            echo "Successfully rolled back to generation $gen_id!"
+            break
+        else
+            echo "Error: Failed to rollback to generation $gen_id."
+            continue
+        fi
+    done
+    ;;
+
+"last")
+    # rollback last generation
+    echo "Rolling back to the last generation..."
+
+    if ! command -v home-manager &>/dev/null; then
+        generations_output=$(nix-shell -p home-manager --run "home-manager generations" | head -n 2)
+    else
+        generations_output=$(home-manager generations | head -n 2)
+    fi
+    if [[ $(echo "$generations_output" | wc -l) -lt 2 ]]; then
+        echo "Error: No previous generation found to rollback to."
+        exit 1
+    fi
+    previous_generation=$(echo "$generations_output" | sed -n '2p')
+    generation_path=$(echo "$previous_generation" | sed -E 's/.*-> (\/nix\/store\/[^ ]+).*/\1/')
+    gen_id=$(echo "$previous_generation" | grep -oE "id [0-9]+" | awk '{print $2}')
+
+    echo "Found previous generation $gen_id at path: $generation_path"
+    echo "Activating previous generation..."
+
+    "$generation_path/activate"
+
+    if [[ $? -eq 0 ]]; then
+        echo "Successfully rolled back to previous generation $gen_id!"
+    else
+        echo "Error: Failed to rollback to previous generation."
+        exit 1
+    fi
+    ;;
+
+*)
+    print_usage
+    ;;
+esac

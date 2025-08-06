@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+scaling_driver=$(</sys/devices/system/cpu/cpu0/cpufreq/scaling_driver)
+if [ "$scaling_driver" == "amd-pstate-epp" ]; then
+    preference="$1"
+    available_preferences=$(</sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences)
+
+    if [ -z "$preference" ]; then
+        echo "No argument passed. Possible values: $available_preferences"
+    else
+        # Check if powerstate is valid
+        if [[ "$available_preferences" =~ (^| )"$preference"($| ) ]]; then
+
+            # Accumulate commands for singular elevation
+            changes=""
+            for cpu_dir in /sys/devices/system/cpu/cpu[0-9]*/; do
+                changes+="echo \"$preference\" > \"${cpu_dir}cpufreq/energy_performance_preference\" && "
+            done
+            changes="${changes%&& }"
+
+            # Elevate once
+            if [ -n "$changes" ]; then
+                if [ "$EUID" -eq 0 ]; then
+                    echo "$changes" | bash
+                else
+                    echo "$changes" | sudo bash
+                fi
+                echo "EPP Mode changed to $preference globally"
+            fi
+
+        else
+            echo "Invalid Power State, choose from: $available_preferences"
+        fi
+    fi
+else
+    echo "EPP is not available. Enable CBBC in BIOS + add amd_pstate=active in kernel parameters (Kernel 6.3+). Reference: https://wiki.archlinux.org/title/CPU_frequency_scaling#Scaling_drivers and https://www.reddit.com/r/linux/comments/15p4bfs/amd_pstate_and_amd_pstate_epp_scaling_driver/" | tee "$(tty)"
+fi

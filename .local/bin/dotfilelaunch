@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+if [[ $# -lt 1 ]]; then
+    echo "Usage: dotfilelaunch <relative-script-path> [args...]" >&2
+    return 2
+fi
+
+if [[ -z "$DOTFILES" ]]; then
+
+    this_realpath=""
+    if command -v realpath >/dev/null 2>&1; then
+        this_realpath=$(realpath "${BASH_SOURCE[0]}")
+    else
+        # basically chase symlinks
+        SOURCE="${BASH_SOURCE[0]}"
+        while [[ -L "$SOURCE" ]]; do
+            DIR=$(cd -P "$(dirname "$SOURCE")" >/dev/null 2>&1 && pwd)
+            SOURCE=$(readlink "$SOURCE")
+            [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+        done
+        this_realpath="$SOURCE"
+    fi
+
+    # get dir
+    if [[ "$this_realpath" == "/" ]]; then
+        script_dir="/"
+    else
+        script_dir=$(dirname "$this_realpath")
+    fi
+
+    # this will always be linked from dotfiles/.local/bin/dotfilelaunch
+    # it finds bin and then goes up to dotfiles. Some edge cases are set here.
+    parent_parent_dir=""
+    if [[ "$script_dir" == "/" ]]; then
+        parent_parent_dir="/"
+        echo "Warning: Script directory is '/'. Cannot go two levels up. BASHRC set to '/'." >&2
+    else
+        parent_dir=$(dirname "$script_dir")
+        if [[ "$parent_dir" == "." ]] || [[ "$parent_dir" == "/" ]]; then
+            parent_parent_dir="/"
+            echo "Warning: Script directory is one level below root ('$script_dir'). Cannot go two levels up. BASHRC set to '/'." >&2
+        else
+            parent_parent_dir=$(dirname "$parent_dir")
+        fi
+    fi
+    export DOTFILES="$parent_parent_dir"
+fi
+
+# since usage is dotfilelaunch .config/bla arg1 arg2
+# get the script name
+script="$1"
+# consume dotfilelaunch
+shift
+full_path="$DOTFILES/$script"
+
+# and if executable, then launch with all the remaining arguments
+if [[ ! -x "$full_path" ]]; then
+    echo "Script $full_path does not exist or is not executable." >&2
+    return 3
+fi
+"$full_path" "$@"
