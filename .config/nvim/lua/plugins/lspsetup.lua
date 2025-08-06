@@ -34,6 +34,35 @@ return { {
     end
 },
     {
+        "WhoIsSethDaniel/mason-tool-installer.nvim",
+        dependencies = { "williamboman/mason.nvim" },
+        config = function()
+            require('mason-tool-installer').setup {
+                ensure_installed = {
+                    -- you can pin a tool to a particular version
+                    -- { 'golangci-lint',        version = 'v1.47.0' },
+                    --
+                    -- -- you can turn off/on auto_update per tool
+                    -- { 'bash-language-server', auto_update = true },
+                    --
+                    -- -- you can do conditional installing
+                    -- { 'gopls',                condition = function() return vim.fn.executable('go') == 1 end },
+                    -- 'lua-language-server',
+                    'nixfmt'
+                },
+                auto_update = false,
+                run_on_start = true,
+                start_delay = 3000,
+                -- debounce_hours = 5,
+                integrations = {
+                    ['mason-lspconfig'] = true,
+                    ['mason-null-ls'] = true,
+                    ['mason-nvim-dap'] = true,
+                },
+            }
+        end
+    },
+    {
         "williamboman/mason-lspconfig.nvim",
         dependencies = { "williamboman/mason.nvim" },
         config = function()
@@ -150,7 +179,7 @@ return { {
     },
     {
         "folke/trouble.nvim",
-        opts = {}, 
+        opts = {},
         cmd = "Trouble",
         keys = {
             {
