@@ -186,7 +186,7 @@ bindsym $mod+Tab exec --no-startup-id rofi -show window
 # to it, when it actually has opened.
 bindsym Mod4+e exec --no-startup-id ~/.local/bin/dotfilelaunch .local/bin/scripts/conditionallaunch dolphin 5
 # may use conditionallaunch bitwarden 10 ? 
-bindsym Mod4+b exec --no-startup-id ~/.local/bin/dotfilelaunch .local/bin/scripts/conditionallaunch bitwarden 10 
+bindsym $mod+b exec --no-startup-id ~/.local/bin/dotfilelaunch .local/bin/scripts/conditionallaunch bitwarden 10 
 # bindsym $mod+b exec --no-startup-id ~/.local/bin/dotfilelaunch .local/bin/scripts/bitwardenlaunch
 
 # You can pass tmux commands directly from i3! This makes window switching so much
