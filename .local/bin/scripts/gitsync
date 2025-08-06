@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-# check_network() {
-#     wget -q --spider http://google.com
-#     return $?
-# }
+check_network() {
+    wget -q --spider http://google.com
+    return $?
+}
 
 fetch_joke() {
     response=$(curl -s https://official-joke-api.appspot.com/random_joke)
