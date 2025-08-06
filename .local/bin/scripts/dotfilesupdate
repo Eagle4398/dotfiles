@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+# Exit when non-zero status
+# Unset Variable -> exit error
+# Stop on errored pipe | 
+set -euo pipefail
+
+cd dotfiles
+softcheckout main 
+cd ..
+softcheckout main
+git reset
+git add dotfiles/
+git commit -m "dotfiles update"
+git push origin main
+git push public main
+git checkout --force dev
+cd dotfiles
+git checkout --force dev
+cd ..
