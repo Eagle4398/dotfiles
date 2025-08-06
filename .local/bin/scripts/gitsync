@@ -16,6 +16,12 @@ fetch_joke() {
     fi
 }
 
+local branch = $(git symbolic-ref --short HEAD)
+if [[ "$branch" == "main" || "$branch" == "master" ]]; then
+    echo "Can't quicksync on main branch."
+    exit 1
+fi
+
 commit_msg="$1"
 
 if [ -z "$commit_msg" ]; then
