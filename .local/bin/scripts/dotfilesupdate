@@ -5,7 +5,7 @@
 # Stop on errored pipe | 
 set -euo pipefail
 
-cd dotfiles
+cd ~/.config/dotfiles/dotfiles
 softcheckout main 
 cd ..
 softcheckout main
