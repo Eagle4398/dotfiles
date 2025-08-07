@@ -25,7 +25,9 @@ case "$1" in
         exit 1
     fi
     echo "Detected NixOS version: $version"
+    set +e
     hm_line=$(nix-channel --list | grep '^home-manager ')
+    set -e
     if [ -z "$hm_line" ]; then
         echo "No home-manager channel configured."
         current_version=""
