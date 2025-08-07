@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+# Exit when non-zero status
+# Unset Variable -> exit error
+# Stop on errored pipe | 
+set -euo pipefail
+
+xhost +SI:localuser:lightdm
+sudo -u lightdm lightdm --test-mode --debug
