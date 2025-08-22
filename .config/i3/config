@@ -103,9 +103,12 @@ bindsym $mod+2 workspace 2
 bindsym $mod+3 workspace 3
 bindsym $mod+4 workspace 4
 bindsym $mod+5 workspace 5
-bindcode $mod+24 workspace 6
-bindcode $mod+25 workspace 7
-bindcode $mod+26 workspace 8
+bindsym $mod+apostrophe workspace 6
+bindsym $mod+period workspace 7
+bindsym $mod+comma workspace 8
+# bindcode $mod+24 workspace 6
+# bindcode $mod+25 workspace 7
+# bindcode $mod+26 workspace 8
 bindsym $mod+p workspace 9
 bindsym $mod+y workspace 10
 # bindsym $mod+6 workspace 6
@@ -120,11 +123,16 @@ bindsym $mod+Shift+2 move container to workspace 2
 bindsym $mod+Shift+3 move container to workspace 3
 bindsym $mod+Shift+4 move container to workspace 4
 bindsym $mod+Shift+5 move container to workspace 5
-bindcode $mod+Shift+24 move container to workspace 6
-bindcode $mod+Shift+25 move container to workspace 7
-bindcode $mod+Shift+26 move container to workspace 8
-bindcode $mod+Shift+27 move container to workspace 9
-bindcode $mod+Shift+28 move container to workspace 10
+bindsym $mod+Shift+apostrophe move container to workspace 6
+bindsym $mod+Shift+period move container to workspace 7
+bindsym $mod+Shift+comma move container to workspace 8
+bindsym $mod+Shift+p move container to workspace 9
+bindsym $mod+Shift+y move container to workspace 10
+# bindcode $mod+Shift+24 move container to workspace 6
+# bindcode $mod+Shift+25 move container to workspace 7
+# bindcode $mod+Shift+26 move container to workspace 8
+# bindcode $mod+Shift+27 move container to workspace 9
+# bindcode $mod+Shift+28 move container to workspace 10
 
 
 # # reload the configuration file (i always use restart i3 inplace)
@@ -175,6 +183,7 @@ assign [class="Alacritty"] 1
 assign [class="Bitwarden"] 10
 assign [class="dolphin"] 5
 assign [class="brave-browser"] 2
+for_window [class="smile"] floating enable
 
 # Screenshot like Snipping Tool in Windows
 bindsym Shift+Mod4+s exec flameshot gui --clipboard
@@ -185,6 +194,8 @@ bindsym $mod+Tab exec --no-startup-id rofi -show window
 # Launches file explorer like in windows but on workspace 5 and only navigates
 # to it, when it actually has opened.
 bindsym Mod4+e exec --no-startup-id ~/.local/bin/dotfilelaunch .local/bin/scripts/conditionallaunch dolphin 5
+bindsym Mod4+period exec --no-startup-id rofimoji --action type 
+
 # may use conditionallaunch bitwarden 10 ? 
 bindsym $mod+b exec --no-startup-id ~/.local/bin/dotfilelaunch .local/bin/scripts/conditionallaunch bitwarden 10 
 # bindsym $mod+b exec --no-startup-id ~/.local/bin/dotfilelaunch .local/bin/scripts/bitwardenlaunch
