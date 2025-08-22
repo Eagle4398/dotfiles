@@ -16,13 +16,16 @@ fetch_joke() {
     fi
 }
 
-branch="$(git symbolic-ref --short HEAD)"
-if [[ "$branch" == "main" || "$branch" == "master" ]]; then
-    echo "Can't quicksync on main branch."
-    exit 1
-fi
-
 commit_msg="$1"
+if [[ "$1" != "!" ]]; then
+    branch="$(git symbolic-ref --short HEAD)"
+    if [[ "$branch" == "main" || "$branch" == "master" ]]; then
+        echo "Can't quicksync on main branch."
+        exit 1
+    fi
+else
+    commit_msg=""
+fi
 
 if [ -z "$commit_msg" ]; then
     if check_network; then
@@ -40,4 +43,3 @@ else
     echo "No changes to commit or commit failed"
 fi
 git push
-
