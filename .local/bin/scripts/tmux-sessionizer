@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 tmux_sessions=$(tmux ls)
 
 # Extract running session IDs. 
