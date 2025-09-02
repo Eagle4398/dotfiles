@@ -99,56 +99,97 @@ return { {
         dependencies = { "williamboman/mason-lspconfig.nvim" },
         ft = "java",
         config = function()
-            -- See `:help vim.lsp.start_client` for an overview of the supported `config` options.
-            -- depends on mason to autoinstall jdtls
+            -- Sets paths relative to mason auto-install. Mason autodownload necessary:
+            --     ensure_installed = { 'jdtls' },
+            --     automatic_enable.exclude = { "jdtls"}
             local install_path = vim.fn.stdpath("data") .. "/mason/packages/jdtls"
             local launcher = vim.fn.glob(install_path .. "/plugins/org.eclipse.equinox.launcher_*.jar")
             local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ':p:h:t')
             local workspace_dir = vim.fn.stdpath("cache") .. "/jdtls/workspace/" .. project_name
 
-            -- Detect OS and set config directory
-            local sysname = vim.fn.system("uname -s"):gsub("\n", "") -- "Linux", "Darwin" (macOS), etc.
+            -- config changes from OS to OS
             local config_dir
-            if sysname == "Linux" then
-                config_dir = install_path .. "/config_linux"
-            elseif sysname == "Darwin" then
+            if vim.fn.has("mac") == 1 then
                 config_dir = install_path .. "/config_mac"
-            elseif vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
+            elseif vim.fn.has("win32") == 1 then
                 config_dir = install_path .. "/config_win"
             else
-                vim.notify("Unsupported system for jdtls config", vim.log.levels.ERROR)
-                return
+                config_dir = install_path .. "/config_linux"
             end
 
-            -- Function to find the closest .iml file upwards and return its filename (or nil)
-            local function find_closest_iml_name(startpath)
-                local path = startpath or vim.fn.expand("%:p:h")
+            --
+            -- I need to sometimes browse through IntelliJ projects. Following
+            -- resolves the project path correctly relative to an .iml file and
+            -- crudely resolves manually set sources paths inside of that .iml
+            -- file.
+            --
+
+            --- Finds the closest .iml file walking up from the current directory.
+            -- @return string|nil: The full path to the .iml file, or nil if not found.
+            local function find_closest_iml_path()
+                local path = vim.fn.expand("%:p:h")
                 while path and #path > 0 do
-                    local iml_files = vim.fn.globpath(path, "*.iml", 0, 1)
+                    local iml_files = vim.fn.globpath(path, "*.iml", false, true)
                     if #iml_files > 0 then
-                        -- Return just the file name (not full path)
-                        return vim.fn.fnamemodify(iml_files[1], ":t")
+                        return iml_files[1] -- Return the full path of the first match
                     end
                     local parent = vim.fn.fnamemodify(path, ":h")
-                    if parent == path then break end
+                    if parent == path then break end -- Reached root
                     path = parent
                 end
                 return nil
             end
 
-            -- Use in your setup:
-            local iml_marker = find_closest_iml_name()
-            local markers = {}
-
-            if iml_marker then
-                table.insert(markers, iml_marker)
+            --- Parses an .iml file by replacing the "file://$MODULE_DIR$/" prefix.
+            -- @param iml_content string: The XML content of the .iml file.
+            -- @param module_dir string: Unused in this version, but kept for API consistency.
+            -- @return table: A list of project-relative paths.
+            local function parse_iml_for_source_paths(iml_content, module_dir)
+                local paths = {}
+                for tag in iml_content:gmatch("<sourceFolder[^>]+/>") do
+                    local url = tag:match('url="([^"]+)"')
+                    if url then
+                        -- This performs the single requested replacement.
+                        local relative_path = url:gsub("file://%$MODULE_DIR%$/", "")
+                        table.insert(paths, relative_path)
+                    end
+                end
+                return paths
             end
-            -- Add standard project markers
-            vim.list_extend(markers, { ".project", ".git", "mvnw", "gradlew" })
 
+            -- Initialize variables for project markers and source paths
+            local iml_path = find_closest_iml_path()
+
+            local rootdir
+            local markers = {}
+            if iml_path then
+                -- Add .iml file name explicitly like: Button.iml
+                table.insert(markers, vim.fn.fnamemodify(iml_path, ":t"))
+            end
+            -- This might not be necessary but vim.fs.root gave me problems if 
+            -- not in some kind of priority order.
+            vim.list_extend(markers, { ".project", ".git", "mvnw", "gradlew" })
+            rootdir = vim.fs.root(0, markers)
+
+            -- Try and get source paths out of .iml file if the .iml path
+            -- is actually the current project.
+            local source_paths = {}
+            if iml_path then
+                local iml_parent = vim.fn.fnamemodify(iml_path, ":h")
+                if rootdir == iml_parent then
+                    local file = io.open(iml_path, "r")
+                    if file then
+                        local content = file:read("*a")
+                        file:close()
+                        source_paths = parse_iml_for_source_paths(content, iml_parent)
+                        vim.notify("JDTLS configured using source paths from: " .. iml_path,
+                            vim.log.levels.INFO)
+                    end
+                end
+            end
+
+            -- The main jdtls configuration table
             local config = {
-                -- for more info see:
-                -- https://github.com/mfussenegger/nvim-jdtls?tab=readme-ov-file#configuration-verbose
                 cmd = {
                     'java',
                     '-Declipse.application=org.eclipse.jdt.ls.core.id1',
@@ -164,16 +205,20 @@ return { {
                     '-configuration', config_dir,
                     '-data', workspace_dir
                 },
-                root_dir = vim.fs.root(0, markers),
-
+                -- root_dir = vim.fs.root(0, markers),
+                root_dir = rootdir,
                 settings = {
                     java = {
+                        -- Other Java settings can go here
                     }
                 },
                 init_options = {
                     bundles = {}
                 },
             }
+            if #source_paths > 0 then
+                config.settings.java.project = { sourcePaths = source_paths, }
+            end
             require('jdtls').start_or_attach(config)
         end
     },
