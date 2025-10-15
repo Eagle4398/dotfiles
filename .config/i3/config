@@ -13,8 +13,8 @@ set $mod Mod1
 # Thanks Childz
 for_window [class="^.*"] border pixel 3
 # class                 border  backgr. text    indicator child_border
-client.focused          #77dd77 #285577 #ffffff #2e9ef4   #285577
-client.unfocused        #ff000d #8a8a8a #777777 #ff000d
+client.focused          #285577 #285577 #ffffff #2e9ef4   #285577
+client.unfocused        #8a8a8a #8a8a8a #777777 #ff000d
 
 hide_edge_borders both 
 
@@ -104,8 +104,8 @@ bindsym $mod+3 workspace 3
 bindsym $mod+4 workspace 4
 bindsym $mod+5 workspace 5
 bindsym $mod+apostrophe workspace 6
-bindsym $mod+period workspace 7
-bindsym $mod+comma workspace 8
+bindsym $mod+comma workspace 7
+bindsym $mod+period workspace 8
 # bindcode $mod+24 workspace 6
 # bindcode $mod+25 workspace 7
 # bindcode $mod+26 workspace 8
@@ -124,8 +124,8 @@ bindsym $mod+Shift+3 move container to workspace 3
 bindsym $mod+Shift+4 move container to workspace 4
 bindsym $mod+Shift+5 move container to workspace 5
 bindsym $mod+Shift+apostrophe move container to workspace 6
-bindsym $mod+Shift+period move container to workspace 7
-bindsym $mod+Shift+comma move container to workspace 8
+bindsym $mod+Shift+comma move container to workspace 7
+bindsym $mod+Shift+period move container to workspace 8
 bindsym $mod+Shift+p move container to workspace 9
 bindsym $mod+Shift+y move container to workspace 10
 # bindcode $mod+Shift+24 move container to workspace 6

@@ -29,6 +29,7 @@ return { {
                 vim.keymap.set({ 'n', 'x' }, '<F3>', '<cmd>lua vim.lsp.buf.format({async = true})<cr>',
                     opts)
                 vim.keymap.set('n', '<F4>', '<cmd>lua vim.lsp.buf.code_action()<cr>', opts)
+                vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, opts)
             end,
         })
     end
@@ -166,8 +167,6 @@ return { {
                 -- Add .iml file name explicitly like: Button.iml
                 table.insert(markers, vim.fn.fnamemodify(iml_path, ":t"))
             end
-            -- This might not be necessary but vim.fs.root gave me problems if 
-            -- not in some kind of priority order.
             vim.list_extend(markers, { ".project", ".git", "mvnw", "gradlew" })
             rootdir = vim.fs.root(0, markers)
 
