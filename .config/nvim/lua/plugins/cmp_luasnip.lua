@@ -63,20 +63,54 @@ return { {
     "hrsh7th/cmp-path",
     "hrsh7th/cmp-cmdline",
     {
-        "iurimateus/luasnip-latex-snippets.nvim",
-        -- vimtex isn't required if using treesitter
-        dependencies = { "L3MON4D3/LuaSnip", "lervag/vimtex" },
+        "lentilus/fastex.nvim",
+        enable = false,
+        ft = { "latex", "tex" },
+        dependencies = {
+            "arne314/typstar",
+            "lervag/vimtex",
+            "L3MON4D3/LuaSnip",
+        },
         config = function()
-            require 'luasnip-latex-snippets'.setup()
-            -- or setup({ use_treesitter = true })
-            require("luasnip").config.setup { enable_autosnippets = true }
+            local ls = require "luasnip"
 
-            local ls = require("luasnip")
-            local utils = require("luasnip-latex-snippets.util.utils")
-            local is_math = utils.with_opts(utils.is_math, false)   -- true to use treesitter
-            local not_math = utils.with_opts(utils.not_math, false) -- true to use treesitter
-        end,
-    }
+            vim.api.nvim_create_autocmd("User", {
+                pattern = "LuasnipPreExpand",
+                callback = function()
+                    vim.api.nvim_feedkeys(vim.api.nvim_eval('"\\<c-G>u"'), "i", true)
+                end
+            })
+
+            ls.config.set_config {
+                history = true,
+                updateevents = "TextChanged,TextChangedI",
+                enable_autosnippets = true,
+                store_selection_keys = "<Tab>"
+            }
+
+            local ft = require("fastex")
+            ft.setup()
+            vim.keymap.set({ "n", "i", "s" }, "<M-j>", function() ft.smart_jump(1) end)
+            vim.keymap.set({ "n", "i", "s" }, "<M-k>", function() ft.smart_jump(-1) end)
+        end
+
+
+    },
+    -- {
+    --     "iurimateus/luasnip-latex-snippets.nvim",
+    --     -- vimtex isn't required if using treesitter
+    --     dependencies = { "L3MON4D3/LuaSnip", "lervag/vimtex" },
+    --     config = function()
+    --         require 'luasnip-latex-snippets'.setup()
+    --         -- or setup({ use_treesitter = true })
+    --         require("luasnip").config.setup { enable_autosnippets = true }
+    --
+    --         local ls = require("luasnip")
+    --         local utils = require("luasnip-latex-snippets.util.utils")
+    --         local is_math = utils.with_opts(utils.is_math, false)   -- true to use treesitter
+    --         local not_math = utils.with_opts(utils.not_math, false) -- true to use treesitter
+    --     end,
+    -- }
 }, {
     "hrsh7th/nvim-cmp",
     enabled = true,

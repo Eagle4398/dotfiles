@@ -1,7 +1,7 @@
 return { {
     "arne314/typstar",
-    -- dir = "~/projects/lua/typstar/",
-    -- dev = true,
+    dir = "~/projects/typstar/",
+    dev = true,
     ft = "typst",
     branch = "dev",
     dependencies = { {
@@ -9,7 +9,7 @@ return { {
         enabled = true,
         config = function()
             require 'nvim-treesitter.configs'.setup {
-                ensure_installed = { "typst" } }
+                ensure_installed = { "typst", "latex"} }
         end
     } },
     config = function()
@@ -23,6 +23,15 @@ return { {
         vim.keymap.set("n", "<C-d>", ":TypstarToggleSnippets<CR>", { noremap = true })
         vim.keymap.set("n", "<leader>ft", ":TypstarAnkiScan<CR>", { noremap = true })
 
+        function isInMath(row, column)
+            local utils = require('typstar.utils')
+            local ts = vim.treesitter
+            local ts_math_query = vim.treesitter.query.parse('typst', '(math) @math')
+            local ts_string_query = ts.query.parse('typst', '(string) @string')
+            local cursor = utils.get_cursor_pos()
+            return utils.cursor_within_treesitter_query(ts_math_query, 0, 0, { row, column })
+                and not utils.cursor_within_treesitter_query(ts_string_query, 0, 0, { row, column })
+        end
 
         -- custom snippet definition
         local tp = require('typstar.autosnippets')
@@ -59,6 +68,16 @@ return { {
             end
         end
 
+        function AlwaysTrue()
+            return true
+        end
+
+        local function inTexMath()
+            return vim.api.nvim_eval('vimtex#syntax#in_mathzone()') == 1
+        end
+        local function notInTexMath()
+            return vim.api.nvim_eval('vimtex#syntax#in_mathzone()') ~= 1
+        end
         -- format: {snippet_type, {trigger, replacement, table of dynamic replacement objects, condition }}
         local snippets = {
             { "newline",
@@ -81,6 +100,16 @@ return { {
                     , indent(1), indent(1), i(4) }, markup } },
 
             { "newline",
+                { 'bsp',
+                    '#beispiel[\n<>\t<>\n<>]\n<><>',
+                    { indent(1), i(1), indent(1), indent(1), i(2), }, markup } },
+
+            { "newline",
+                { 'stz',
+                    '#beispiel[\n<>\t<>\n<>]\n<><>',
+                    { indent(1), i(1), indent(1), indent(1), i(2), }, markup } },
+
+            { "newline",
                 { 'item',
                     'enum.item([\n<>\t<>\n<>]), <>',
                     { indent(1), i(1), indent(1), i(2) }, function() return true end } },
@@ -92,58 +121,135 @@ return { {
 
             -- reimplemented
             -- { "replace",     { '__', '_(<>) <>', { visual(1, '1'), i(2) }, math } },
-            { "replace",     { 'ff', '(<>) / (<>) <>', { visual(1, '1'), i(2), i(3) }, math } },
-            { "replace",     { 'it', 'integral_(<>) <> dif <> <>', { i(1), visual(2), i(3, 'x'), i(4) }, math } },
-            { "replace",     { 'int', 'integral_(<>)^(<>) <> dif <> <>', { i(1), i(2), visual(3), i(4, 'x'), i(5) }, math } },
+            { "replace", { 'ff', '(<>) / (<>) <>', { visual(1, '1'), i(2), i(3) }, math } },
+            { "replace", { 'it', 'integral_(<>) <> dif <> <>', { i(1), visual(2), i(3, 'x'), i(4) }, math } },
+            { "replace", { 'int', 'integral_(<>)^(<>) <> dif <> <>', { i(1), i(2), visual(3), i(4, 'x'), i(5) }, math } },
 
-            { "replace",     { 'span', 'op("span") ', {}, math } },
-            { "replace",     { 'op', 'op("<>")<> ', { i(1), i(2) }, math } },
+            { "replace", { 'span', 'op("span") ', {}, math } },
+            { "replace", { 'op', 'op("<>")<> ', { i(1), i(2) }, math } },
 
-            { "replace",     { 'spp', 'supset ', {}, math } },
+            { "replace", { 'spp', 'supset ', {}, math } },
 
-            { "replace",     { 'logg', 'log_(<>)(<>)<> ', { i(1), i(2), i(3) }, math } },
+            { "replace", { 'logg', 'log_(<>)(<>)<> ', { i(1), i(2), i(3) }, math } },
 
-            { "replace",     { 'ln', 'ln(<>)<> ', { i(1), i(2) }, math } },
+            { "replace", { 'ln', 'ln(<>)<> ', { i(1), i(2) }, math } },
 
-            { "replace",     { 'text', 'text("<>")<>', { i(1), i(2) }, math } },
+            { "replace", { 'text', 'text("<>")<>', { i(1), i(2) }, math } },
 
-            { "replace",     { 'tt', 'wide &text("| <>")<>', { i(1), i(2) }, math } },
+            { "replace", { 'tt', 'wide &text("| <>")<>', { i(1), i(2) }, math } },
+
+            { "replace", { 'ONO', 'cal(O)(<>)<>', { visual(1), i(2) }, math } },
+            { "replace", { 'ONO', '$cal(O)(<>)$<>', { visual(1), i(2) }, markup } },
             --
             -- -- { "replace",     { '\\(', '(<>)<>', { i(1), i(2) } } },
             -- -- { "replace",     { '\\[', '[<>]<>', { i(1), i(2) } } },
             -- -- { "replace",     { '\\{', '{<>}<>', { i(1), i(2) } } },
             --
-            { "replace",     { 'mk', '$<>$<>', { i(1, '1+1'), i(2) }, markup } },
+            { "replace", { 'mk', '$<>$<>', { i(1, '1+1'), i(2) }, markup } },
 
-            { "replace",     { 'bb', '*<>*<>', { i(1), i(2) }, markup } },
+            { "replace", { 'bb', '*<>*<>', { i(1), i(2) }, markup } },
 
-            { "replace",     { 'qstr', '#strike[<>]<>', { i(1), i(2) }, markup } },
+            { "replace", { 'qstr', '#strike[<>]<>', { i(1), i(2) }, markup } },
 
-            { "replace",     { 'ouset', 'attach(<>,t: <>)<>', { i(1, '\"middle\"'), i(2, '\"top\"'), i(3) }, math } },
+            { "replace", { 'ouset', 'attach(<>,t: <>)<>', { i(1, '\"middle\"'), i(2, '\"top\"'), i(3) }, math } },
 
-            { "replace",     { 'scr', 'attach(<>,bl: <>, br: <>)<>', { i(1, '\"main\"'), i(2, '\"left\"'), i(3, '\"right\"'), i(4) }, math } },
+            { "replace", { 'scr', 'attach(<>,bl: <>, br: <>)<>', { i(1, '\"main\"'), i(2, '\"left\"'), i(3, '\"right\"'), i(4) }, math } },
 
-            { "replace",     { '_pi', '$pi$', {}, markup } },
+            { "replace", { '_pi', '$pi$', {}, markup } },
             --
             -- { "intonewline", { 'eqv', '<>\t & <>', { "<==>", tp.visual(1) }, math, '\\' } },
             --
             -- { "intonewline", { 'equ', '<>\t & <>', { "=", tp.visual(1) }, math, '\\' } }
             -- function M.visual(idx, default, line_prefix, indent_capture_idx)
-            { "intonewline", { 'equ', '\\ <> & <>', { i(1, "="), tp.visual(2) }, math } },
-            { "intonewline", { 'eqv', '\\ <> & <>', { i(1, "<==>"), tp.visual(2) }, math } }
+            { "intonewline", { 'eqv', '\\ <> & <>', { i(1, "="), tp.visual(2) }, math, nil, {
+                -- wordTrig = false,
+                callbacks = {
+                    pre = function(snippet)
+                        local cursor = vim.api.nvim_win_get_cursor(0)
+                        local startrow = cursor[1] - 1
 
+                        function getline(rownumber)
+                            local line = vim.api.nvim_buf_get_lines(0, rownumber, rownumber + 1, false)[1]
+                            if rownumber == startrow and snippet
+                                and snippet.captures
+                                and snippet.captures[1]
+                            then
+                                line = line .. snippet.captures[1]
+                            end
+                            return line
+                        end
+
+                        local thisrow = startrow
+                        local equalsFound
+                        local lastNonWhiteSpace
+
+                        while thisrow >= 1 do
+                            local thisline = getline(thisrow)
+                            if not thisline then
+                                thisrow = thisrow - 1
+                                goto continue
+                            end
+                            for i = #thisline, 1, -1 do
+                                local thisValue = thisline:sub(i, i)
+                                if thisValue == '&' and isInMath(thisrow, i) then
+                                    return
+                                end
+                                -- if (thisValue == '\\' or thisValue == '$') and isInMath(thisrow, i) then
+                                if (thisValue == '\\' or thisValue == '$') then
+                                    goto breky
+                                end
+                                if not equalsFound and (thisValue == '='
+                                        or thisValue == '>'
+                                        or thisValue == '<') and isInMath(thisrow, i) then
+                                    equalsFound = { thisrow, i }
+                                elseif thisValue ~= ' ' then
+                                    lastNonWhiteSpace = { thisrow, i }
+                                end
+                            end
+                            thisrow = thisrow - 1
+                            ::continue::
+                        end
+                        ::breky::
+
+                        local thisline
+                        local outline
+                        local column
+                        if equalsFound then
+                            row = equalsFound[1]
+                            column = equalsFound[2]
+                            thisline = getline(row)
+                            outline = thisline:sub(1, column) ..
+                                " &" ..
+                                thisline:sub(column + 1)
+                        else
+                            row = lastNonWhiteSpace[1]
+                            column = lastNonWhiteSpace[2]
+                            thisline = getline(row)
+                            outline = thisline:sub(1, column - 1) ..
+                                "& " ..
+                                thisline:sub(column)
+                        end
+                        print("Trying to replace: " .. thisline .. " with " .. outline)
+
+                        vim.defer_fn(function()
+                            vim.api.nvim_buf_set_lines(0, row, row + 1, false, { outline })
+                        end, 1)
+                    end
+                }
+            } } },
+            -- { "intonewline", { 'eqv', '\\ <> & <>', { i(1, "<==>"), tp.visual(2) }, math } },
+
+            { "replace", { 'linc', 'LineComment(\n<>,\n<>[<>])<>', { visual(1), indent(1), i(2, 'comment'), i(3) }, AlwaysTrue } },
             -- {"intonewline", {'dom', '$\t<>\n <>', {visual(1),visual(2)}, markup}}
         }
-
-        function AlwaysTrue()
-            return true
-        end
 
         local latexsnips = {
             -- This is EXTREMELY scuffed. Only works because of autopairs
             -- No time to look into how I would even disable autopairs if there is luasnip precedence
             { "replace", { '""', '\\glqq{}\\<>grqq{}<>', { visual(1), i(2) }, AlwaysTrue } },
             { "replace", { '-co', '\\texttt{<>} <>', { i(1), i(2) }, AlwaysTrue } },
+            { "replace", { 'kk', '^{<>} <>', { i(1), i(2) }, inTexMath, 1001, { wordTrig = false } } },
+            { "replace", { 'mk', '\\(<>\\)<>', { i(1, '1+1'), i(2) }, notInTexMath  } },
         }
 
         ls.add_snippets("tex", import_snippets(latexsnips))

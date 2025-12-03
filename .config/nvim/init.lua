@@ -35,6 +35,10 @@ vim.opt.spelllang = { "en_us", "de_de" }
 vim.api.nvim_set_keymap("n", "j", "v:count ? 'j' : 'gj'", { noremap = true, expr = true })
 vim.api.nvim_set_keymap("n", "k", "v:count ? 'k' : 'gk'", { noremap = true, expr = true })
 
+
+
+
+
 -- this should be its own plugin but this is just some LLM mess
 -- for dynamically selecting code for latex code quoting. as it's implemented
 -- now it's basically: if you have such a line under your cursor

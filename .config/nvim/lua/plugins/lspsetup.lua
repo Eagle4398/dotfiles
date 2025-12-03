@@ -64,6 +64,17 @@ return { {
         end
     },
     {
+        'stevearc/conform.nvim',
+        config = function()
+            require("conform").setup({
+                formatters_by_ft = {
+                    lua = { "stylua" },
+                    typst = { "typstyle" },
+                },
+            })
+        end
+    },
+    {
         "williamboman/mason-lspconfig.nvim",
         dependencies = { "williamboman/mason.nvim" },
         config = function()
@@ -75,21 +86,9 @@ return { {
                         "jdtls"
                     }
                 },
-                handlers = {
-                    function(server_name)
-                        require('lspconfig')[server_name].setup({})
-                    end,
-                    ["tinymist"] = function()
-                        require("lspconfig").tinymist.setup({
-                            -- this is because https://github.com/neovim/neovim/issues/30675#issuecomment-2395272151
-                            -- should be fixed in 0.10.3 though.
-                            offset_encoding = "utf-8",
-                            settings = {
-                                formatterMode = "typstyle",
-                            },
-                        })
-                    end,
-                },
+            })
+            vim.lsp.config('tinymist', {
+                settings = { formatterMode = "typstyle" },
             })
         end,
 
