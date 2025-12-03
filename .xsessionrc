@@ -1,0 +1,10 @@
+#! usr/env/bin bash
+if [ -e /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]; then
+  . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+fi
+
+if [ -e ~/.nix-profile/etc/profile.d/hm-session-vars.sh ]; then
+  . ~/.nix-profile/etc/profile.d/hm-session-vars.sh
+fi
+
+xss-lock -l -- i3lock -n &

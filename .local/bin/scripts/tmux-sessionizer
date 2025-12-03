@@ -7,7 +7,8 @@ tmux_sessions=$(tmux ls)
 # Extract running session IDs.
 running_sessions=$(grep -Po '^.+?(?=: )' <<<"$tmux_sessions")
 
-SESSIONIZER_CONFIG_DIR=~/.config/dotfiles
+SESSIONIZER_CONFIG_DIR=~/.config/nixconfig
+# SESSIONIZER_CONFIG_DIR=~/.config/dotfiles
 
 if [[ $# -gt 0 ]]; then
     selected="$1"
