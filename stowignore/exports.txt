@@ -1,6 +1,4 @@
 export PY_PATH="$HOME/builds/python_glob_env"
-export VISUAL=nvim
 export EDITOR=nvim
-export SUDO_EDITOR=nvim
 export SSH_AUTH_SOCK="$HOME/.bitwarden-ssh-agent.sock"
 export _JAVA_OPTIONS='-Dawt.useSystemAAFontSettings=lcd'

@@ -16,6 +16,8 @@ for_window [class="^.*"] border pixel 3
 client.focused          #285577 #285577 #ffffff #2e9ef4   #285577
 client.unfocused        #8a8a8a #8a8a8a #777777 #ff000d
 
+title_align center
+
 hide_edge_borders both 
 
 # This font is widely installed, provides lots of unicode glyphs, right-to-left
@@ -235,5 +237,14 @@ exec --no-startup-id alacritty
 exec --no-startup-id picom -b
 # this should auto-recognize external displays but oh well doen't work that well
 exec --no-startup-id autorandr --change
+
+# exec --no-startup-id xidlehook \
+# --detect-sleep \
+# --not-when-audio \
+# --not-when-fullscreen \
+# --timer 1200 'i3lock' '' 
+# # --timer 1200 'xset dpms force standby' '' \
+# # --timer 1200 'systemctl suspend' ''
+exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork
 
 workspace 9 output HDMI-1 
