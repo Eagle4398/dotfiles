@@ -3,11 +3,11 @@
 # Exit when non-zero status
 # Unset Variable -> exit error
 # Stop on errored pipe |
-set -euo pipefail
+# set -euo pipefail
 
 # if not on root, relaunch the command
 if [ "$EUID" -ne 0 ]; then
-    exec sudo "$0" "$@"
+    exec sudo env PATH=$PATH "$0" "$@"
 fi
 
 echo "Running root powersave actions..."

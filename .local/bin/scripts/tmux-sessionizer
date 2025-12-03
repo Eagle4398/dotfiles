@@ -4,20 +4,32 @@ set -euo pipefail
 
 tmux_sessions=$(tmux ls)
 
-# Extract running session IDs. 
-running_sessions=$(grep -Po '^.+?(?=: )' <<< "$tmux_sessions")
+# Extract running session IDs.
+running_sessions=$(grep -Po '^.+?(?=: )' <<<"$tmux_sessions")
 
 SESSIONIZER_CONFIG_DIR=~/.config/dotfiles
 
 if [[ $# -gt 0 ]]; then
     selected="$1"
 else
-    options=$(printf "%s\n" "${running_sessions[@]}" "$(find $(realpath "$SESSIONIZER_CONFIG_DIR") ~/builds/ ~/projects/ -mindepth 0 -maxdepth 4 -type d)")
-    selected=$(fzf <<< "${options[@]}")
+    options=$(printf "%s\n" "${running_sessions[@]}" "$(find $(realpath "$SESSIONIZER_CONFIG_DIR") ~/builds/ ~/projects/ ~/nixos-config/ -mindepth 0 -maxdepth 4 -type d)")
+    selected=$(fzf <<<"${options[@]}")
 fi
 
 if [[ "$selected" == *"/"* ]]; then
-    selected_name=$(basename "$selected" | tr . _)
+    selected_path=$(realpath "$selected")
+    thisdir=$(basename "$selected_path")
+    parentpath=$(dirname "$selected_path")
+    parentdir=$(basename "$parentpath")
+
+    if [[ "$parentdir" == "/" ]] || [[ "$parentdir" == "." ]]; then
+        selected_name="$thisdir"
+    else
+        selected_name="${thisdir}-${parentdir}"
+    fi
+
+    selected_name=$(echo "$selected_name" | tr . _)
+    # selected_name=$(basename "$selected" | tr . _)
 else
     selected_name="$selected"
 fi
@@ -29,7 +41,7 @@ if [[ -z $TMUX ]] && [[ -z $tmux_running ]]; then
     exit 0
 fi
 
-if ! tmux has-session -t=$selected_name 2> /dev/null; then
+if ! tmux has-session -t=$selected_name 2>/dev/null; then
     tmux new-session -ds "$selected_name" -c $selected
 fi
 

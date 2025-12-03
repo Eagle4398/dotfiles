@@ -3,6 +3,8 @@
 # Unset Variable -> exit error
 # Stop on errored pipe | 
 
+exit 0
+
 # are binaries in path
 REQUIRED_TOOLS=("uv" "clang") 
 for tool in "${REQUIRED_TOOLS[@]}"; do

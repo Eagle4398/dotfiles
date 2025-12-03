@@ -7,7 +7,9 @@
 # Stop on errored pipe | 
 set -euo pipefail
 
-output_name="eDP-1" 
+# output_name="eDP-1" 
+
+output_name="$(xrandr | awk '/ connected/{print $1; exit}')"
 
 if [ "$1" = "high" ]; then
   current_mode=$(xrandr | grep -A1 "$output_name connected" | tail -n1 | awk '{print $1}')
