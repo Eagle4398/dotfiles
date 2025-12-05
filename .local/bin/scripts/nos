@@ -2,10 +2,39 @@
 
 case "$1" in
 reb)
-    sudo nixos-rebuild switch 
+    sudo nixos-rebuild switch
+    ;;
+cache)
+    case "$2" in
+    start)
+        export NIX_SECRET_KEY_FILE="~/.config/nix-keys/secret-key"
+        nix-serve --port 5000 --host 0.0.0.0
+        ;;
+    reb)
+        if [ -n "$3" ]; then
+            LOCAL_CACHE ="$3?priority=20"
+        else
+            LOCAL_CACHE="http://192.168.8.9:5000?priority=20"
+        fi
+        NIXDIR=$(realpath ~/.config/nixconfig)
+
+        REMOTE_CACHES=$(nix eval --impure --raw --expr \
+            "builtins.concatStringsSep \" \" \
+            (import $NIXDIR/common/substituters.nix {}).nix.settings.substituters")
+
+        ALL_CACHES="$LOCAL_CACHE $REMOTE_CACHES"
+
+        echo "Using Substituters: $ALL_CACHES"
+        sudo nixos-rebuild switch --option substituters "$ALL_CACHES"
+        ;;
+    *)
+        echo "Unknown command: cache $2"
+        echo "Available commands: cache start, cache reb"
+        ;;
+    esac
     ;;
 test)
-    sudo nixos-rebuild test 
+    sudo nixos-rebuild test
     ;;
 gc)
     sudo nix-collect-garbage
@@ -16,6 +45,6 @@ ultragc)
     ;;
 *)
     echo "Unknown command: $1"
-    echo "Available commands: reb, test, gc"
+    echo "Available commands: reb, test, gc, cache"
     ;;
 esac
