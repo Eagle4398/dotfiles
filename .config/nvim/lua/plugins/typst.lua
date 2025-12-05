@@ -9,7 +9,7 @@ return { {
         enabled = true,
         config = function()
             require 'nvim-treesitter.configs'.setup {
-                ensure_installed = { "typst", "latex"} }
+                ensure_installed = { "typst", "latex" } }
         end
     } },
     config = function()
@@ -164,83 +164,87 @@ return { {
             { "intonewline", { 'eqv', '\\ <> & <>', { i(1, "="), tp.visual(2) }, math, nil, {
                 -- wordTrig = false,
                 callbacks = {
-                    pre = function(snippet)
-                        local cursor = vim.api.nvim_win_get_cursor(0)
-                        local startrow = cursor[1] - 1
+                    [1] =
+                    {
+                        pre = function(snippet)
+                            local cursor = vim.api.nvim_win_get_cursor(0)
+                            local startrow = cursor[1] - 1
 
-                        function getline(rownumber)
-                            local line = vim.api.nvim_buf_get_lines(0, rownumber, rownumber + 1, false)[1]
-                            if rownumber == startrow and snippet
-                                and snippet.captures
-                                and snippet.captures[1]
-                            then
-                                line = line .. snippet.captures[1]
+                            function getline(rownumber)
+                                local line = vim.api.nvim_buf_get_lines(0, rownumber, rownumber + 1, false)[1]
+                                if rownumber == startrow and snippet
+                                    and snippet.captures
+                                    and snippet.captures[1]
+                                then
+                                    line = line .. snippet.captures[1]
+                                end
+                                return line
                             end
-                            return line
-                        end
 
-                        local thisrow = startrow
-                        local equalsFound
-                        local lastNonWhiteSpace
+                            local thisrow = startrow
+                            local equalsFound
+                            local lastNonWhiteSpace
 
-                        while thisrow >= 1 do
-                            local thisline = getline(thisrow)
-                            if not thisline then
+                            while thisrow >= 1 do
+                                local thisline = getline(thisrow)
+                                if not thisline then
+                                    thisrow = thisrow - 1
+                                    goto continue
+                                end
+                                for i = #thisline, 1, -1 do
+                                    local thisValue = thisline:sub(i, i)
+                                    if thisValue == '&' and isInMath(thisrow, i) then
+                                        return
+                                    end
+                                    -- if (thisValue == '\\' or thisValue == '$') and isInMath(thisrow, i) then
+                                    if (thisValue == '\\' or thisValue == '$') then
+                                        goto breky
+                                    end
+                                    if not equalsFound and (thisValue == '='
+                                            or thisValue == '>'
+                                            or thisValue == '<') and isInMath(thisrow, i) then
+                                        equalsFound = { thisrow, i }
+                                    elseif thisValue ~= ' ' then
+                                        lastNonWhiteSpace = { thisrow, i }
+                                    end
+                                end
                                 thisrow = thisrow - 1
-                                goto continue
+                                ::continue::
                             end
-                            for i = #thisline, 1, -1 do
-                                local thisValue = thisline:sub(i, i)
-                                if thisValue == '&' and isInMath(thisrow, i) then
-                                    return
-                                end
-                                -- if (thisValue == '\\' or thisValue == '$') and isInMath(thisrow, i) then
-                                if (thisValue == '\\' or thisValue == '$') then
-                                    goto breky
-                                end
-                                if not equalsFound and (thisValue == '='
-                                        or thisValue == '>'
-                                        or thisValue == '<') and isInMath(thisrow, i) then
-                                    equalsFound = { thisrow, i }
-                                elseif thisValue ~= ' ' then
-                                    lastNonWhiteSpace = { thisrow, i }
-                                end
+                            ::breky::
+
+                            local thisline
+                            local outline
+                            local column
+                            if equalsFound then
+                                row = equalsFound[1]
+                                column = equalsFound[2]
+                                thisline = getline(row)
+                                outline = thisline:sub(1, column) ..
+                                    " &" ..
+                                    thisline:sub(column + 1)
+                            else
+                                row = lastNonWhiteSpace[1]
+                                column = lastNonWhiteSpace[2]
+                                thisline = getline(row)
+                                outline = thisline:sub(1, column - 1) ..
+                                    "& " ..
+                                    thisline:sub(column)
                             end
-                            thisrow = thisrow - 1
-                            ::continue::
-                        end
-                        ::breky::
+                            print("Trying to replace: " .. thisline .. " with " .. outline)
 
-                        local thisline
-                        local outline
-                        local column
-                        if equalsFound then
-                            row = equalsFound[1]
-                            column = equalsFound[2]
-                            thisline = getline(row)
-                            outline = thisline:sub(1, column) ..
-                                " &" ..
-                                thisline:sub(column + 1)
-                        else
-                            row = lastNonWhiteSpace[1]
-                            column = lastNonWhiteSpace[2]
-                            thisline = getline(row)
-                            outline = thisline:sub(1, column - 1) ..
-                                "& " ..
-                                thisline:sub(column)
+                            vim.defer_fn(function()
+                                vim.api.nvim_buf_set_lines(0, row, row + 1, false, { outline })
+                            end, 1)
                         end
-                        print("Trying to replace: " .. thisline .. " with " .. outline)
+                    }
 
-                        vim.defer_fn(function()
-                            vim.api.nvim_buf_set_lines(0, row, row + 1, false, { outline })
-                        end, 1)
-                    end
                 }
             } } },
             -- { "intonewline", { 'eqv', '\\ <> & <>', { i(1, "<==>"), tp.visual(2) }, math } },
 
-            { "replace", { 'linc', 'LineComment(\n<>,\n<>[<>])<>', { visual(1), indent(1), i(2, 'comment'), i(3) }, AlwaysTrue } },
-            -- {"intonewline", {'dom', '$\t<>\n <>', {visual(1),visual(2)}, markup}}
+            { "replace",     { 'linc', 'LineComment(\n<>,\n<>[<>])<>', { visual(1), indent(1), i(2, 'comment'), i(3) }, AlwaysTrue } },
+            { "intonewline", { 'dom', '$\t<>\n <>', { visual(1), visual(2) }, math } }
         }
 
         local latexsnips = {
@@ -249,7 +253,7 @@ return { {
             { "replace", { '""', '\\glqq{}\\<>grqq{}<>', { visual(1), i(2) }, AlwaysTrue } },
             { "replace", { '-co', '\\texttt{<>} <>', { i(1), i(2) }, AlwaysTrue } },
             { "replace", { 'kk', '^{<>} <>', { i(1), i(2) }, inTexMath, 1001, { wordTrig = false } } },
-            { "replace", { 'mk', '\\(<>\\)<>', { i(1, '1+1'), i(2) }, notInTexMath  } },
+            { "replace", { 'mk', '\\(<>\\)<>', { i(1, '1+1'), i(2) }, notInTexMath } },
         }
 
         ls.add_snippets("tex", import_snippets(latexsnips))
